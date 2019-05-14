@@ -2,14 +2,14 @@ const express = require('express');
 const { check, validationResult } = require('express-validator/check');
 const config = require('config');
 const router = express.Router();
+//
 
-const Data = require('../models/Data');
 const _Events = require('../models/Events');
 
 // @    Method GET /events/all
 // @    Show all of the events
 // @    Public
-router.get('/show/all', async (req, res) => {
+router.get('/show/all', async (req, res, next) => {
     await _Events.find((err, events) => {
         if(err) {
            return next(new Error(err));
@@ -79,7 +79,7 @@ router.put('/edit/:id', [
         }
         events.name = req.body.name;
         events.date = req.body.date;
-        events.save(
+        await events.save(
             function (error, events) {
                 if(error)  { res.status(401).send('Unabled'); }
                 res.status(200).json(events);
