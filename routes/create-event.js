@@ -3,19 +3,38 @@ const { check, validationResult } = require('express-validator/check');
 const config = require('config');
 const router = express.Router();
 
+const Data = require('../models/Data');
 const _Events = require('../models/Events');
 
-// @    Method GET /events
-// @    Show that we have access to create-event
+// @    Method GET /events/all
+// @    Show all of the events
 // @    Public
-router.get('/', (req, res) => {
-    res.status(200).send('Hi from events');
+router.get('/all', (req, res) => {
+    _Events.find((err, events) => {
+        if(err) {
+           return next(new Error(err));
+        }
+        res.json(events);
+    })
 });
 
-// @    Method POST /events
+// @    Method GET /events/show:id
+// @    Show event by id
+// @    Public
+router.get('/show/:id', (req, res, next) => {
+    const id = req.params.id;
+    _Events.findById(id, (err, events) => {
+        if(err) {
+            return next(new Error(err));
+        }
+        res.json(events);
+    })
+});
+
+// @    Method POST /events/create
 // @    Creating new event
 // @    Public
-router.post('/', [
+router.post('/create', [
     check('name').not().isEmpty(),
     check('date').not().isEmpty(),
 ], async (req, res) => {
@@ -39,6 +58,12 @@ router.post('/', [
         console.log(e.message);
         res.status(500).send('Server error');
     }
+
+});
+// @    Method DELETE /events/delete
+// @    Deleting event
+// @    Public
+router.delete('/delete', (req, res) => {
 
 });
 module.exports = router;
