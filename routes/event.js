@@ -11,18 +11,13 @@ const auth = require('../middleware/auth');
 // @    Show all of the events
 // @    Public
 router.get('/show/all', auth ,async (req, res, next) => {
-    // const owner = req.header('owner');
-    const roles = ['owner'];
-    await _Events.find()
-        .populate({
-            path: 'roles',
-            match: {owner: {$filter: roles}},
-            select: 'owner',
-        })
-        .sort({'_id': 1})
-        .exec((err, events) => {
-            res.send(events);
-        })
+    const owner = req.header('owner');
+    await _Events.find({owner: owner}, (err, result) => {
+        if(err) {
+            res.status(401).send('Error');
+        }
+        res.json(result);
+    });
     // const showAll = await _Events.find((err, result) => {
     //    if(err) {
     //         return next(new Error(err));
