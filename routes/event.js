@@ -2,14 +2,14 @@ const express = require('express');
 const { check, validationResult } = require('express-validator/check');
 const config = require('config');
 const router = express.Router();
-//
 
 const _Events = require('../models/Events');
+const auth = require('../middleware/auth');
 
-// @    Method GET /events/all
+// @    Method GET me/events/all
 // @    Show all of the events
 // @    Public
-router.get('/show/all', async (req, res, next) => {
+router.get('/show/all', auth ,async (req, res, next) => {
     await _Events.find((err, events) => {
         if(err) {
            return next(new Error(err));
@@ -18,10 +18,10 @@ router.get('/show/all', async (req, res, next) => {
     })
 });
 
-// @    Method GET /events/show:id
+// @    Method GET me/events/show:id
 // @    Show event by id
 // @    Public
-router.get('/show/:id', async (req, res, next) => {
+router.get('/show/:id', auth ,async (req, res, next) => {
     const id = req.params.id;
     await _Events.findById(id, (err, events) => {
         if(err) {
@@ -31,10 +31,10 @@ router.get('/show/:id', async (req, res, next) => {
     })
 });
 
-// @    Method POST /events/create
+// @    Method POST me/events/create
 // @    Creating new event
 // @    Public
-router.post('/create', [
+router.post('/create', auth , [
     check('name').not().isEmpty(),
     check('date').not().isEmpty(),
 ], async (req, res) => {
@@ -61,10 +61,10 @@ router.post('/create', [
 
 });
 
-// @    Method PUT /events/edit
+// @    Method PUT me/events/edit
 // @    Deleting event
 // @    Public
-router.put('/edit/:id', [
+router.put('/edit/:id', auth , [
     check('name').not().isEmpty(),
     check('date').not().isEmpty()
 ] ,async (req, res, next) => {
@@ -88,10 +88,10 @@ router.put('/edit/:id', [
     })
 });
 
-// @    Method DELETE /events/delete/:id
+// @    Method DELETE me/events/delete/:id
 // @    Deleting event
 // @    Public
-router.delete('/delete/:id', async (req, res, next) => {
+router.delete('/delete/:id', auth ,async (req, res, next) => {
     const id = req.params.id;
     await _Events.findByIdAndDelete(id, function (err, event) {
         if (err) {
