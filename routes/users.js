@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const auth = require('../middleware/auth');
+const _crypt = require('../helpers/crypt-password');
 const User = require('../models/User');
 
 // @    Method POST /users/register
@@ -21,7 +22,6 @@ router.post('/register', [
     if(!errors.isEmpty()) {
         return res.status(401).send('Data is not valid');
     }
-
     try {
         // *Search user in db, if already exist throw an error
         let error = await User.findOne({ email });
@@ -33,33 +33,47 @@ router.post('/register', [
             email: email,
             password: password
         });
-
         //Crypt password with salt
-        const salt = await bcrypt.genSalt(10);
-        const newPassword = await bcrypt.hash(password, salt);
-
+        const newPassword = await _crypt(password);
         user.password = newPassword;
-
-        const payload = {
-            user: {
-                id: user._id
-            }
-        };
-
-        //Saving new user to db
         await user.save();
-
-        jwt.sign(payload,
-            config.get("jwtSecret"),
-            (err, token) => {
-                if(err) { throw err; }
-                res.status(200).json({ user, token })
-            });
+       res.status(200).json(user);
     } catch (e) {
         console.log(`${e.message}`);
         res.status(500).send('Server error');
     }
 });
+
+router.post('/login', async (req, res) => {
+    let user = User;
+    const { email, password } = req.body;
+    try {
+        const find = await User.findOne({ email });
+        const payload = {
+            user: {
+                id: find._id
+            }
+        };
+
+        //Saving new user to db
+        jwt.sign(payload,
+            config.get("jwtSecret"),
+           async (err, token) => {
+                if(err) { throw err; }
+                 await bcrypt.compare(password, find.password, (err, result) => {
+                   if(!result) {
+                       res.status(401).send('Bad');
+                   }
+                    res.status(200).json({ token });
+               });
+
+                // res.redirect('http://localhost:3001/users/login');
+            });
+    } catch (e) {
+        console.log(e.message);
+    }
+});
+
 // @    Method GET /users/me
 // @    Get access to account
 // @    Public

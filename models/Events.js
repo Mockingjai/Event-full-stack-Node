@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Schema = require("mongoose");
 
 const EventSchema = new mongoose.Schema({
     name: {
@@ -9,6 +10,10 @@ const EventSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
         // required: true
+    },
+    owner: {
+        type: String,
+        ref: 'owner'
     }
 });
 
