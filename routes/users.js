@@ -13,7 +13,7 @@ const User = require('../models/User');
 // @    Register new user
 // @    Public
 router.post('/register', [
-    //Validating email 'n' password fields
+    //Validating form
     check('email').isEmail(),
     check('password').isLength({ min: 6 }),
 ] , async (req, res) => {
@@ -36,6 +36,7 @@ router.post('/register', [
         //Crypt password with salt
         const newPassword = await _crypt(password);
         user.password = newPassword;
+        //Add new user to db
         await user.save();
        res.status(200).json(user);
     } catch (e) {
@@ -54,20 +55,19 @@ router.post('/login', async (req, res) => {
                 id: find._id
             }
         };
-
-        //Saving new user to db
+        //Giving jwt to user
         jwt.sign(payload,
             config.get("jwtSecret"),
            async (err, token) => {
                 if(err) { throw err; }
+                //Decrypt password and compare them
                  await bcrypt.compare(password, find.password, (err, result) => {
-                   if(!result) {
-                       res.status(401).send('Bad');
-                   }
+                   if(err) {
+                       res.json(err);
+                    }
+                    //If passwords is equal give to the user token
                     res.status(200).json({ token });
                });
-
-                // res.redirect('http://localhost:3001/users/login');
             });
     } catch (e) {
         console.log(e.message);
@@ -79,6 +79,7 @@ router.post('/login', async (req, res) => {
 // @    Public
 router.get('/me', auth, async (req, res) => {
     try {
+        //Get access to the home page of the user
         const user = await User.findById(req.user.id).select('-password');
         res.json(user);
     } catch (e) {

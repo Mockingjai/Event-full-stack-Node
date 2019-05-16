@@ -7,23 +7,24 @@ const router = express.Router();
 const _Events = require('../models/Events');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+
 // @    Method GET me/events/all
 // @    Show all of the events
 // @    Public
 router.get('/show/all', auth ,async (req, res, next) => {
+    //Adding id of the user to the request to get his/her events
     const owner = req.header('owner');
-    // await _Events.find({owner: owner}, (err, result) => {
-    //     if(err) {
-    //         res.status(401).send('Error');
-    //     }
-    //     res.json(result);
-    // });
-    const { page, perPage } = req.query;
-    const options = {
-        page: parseInt(page, 10),
-        limit: parseInt(perPage, 10)
-    };
+
+    /* Pagination for events page
+    // const { page, perPage } = req.query;
+    // const options = {
+    //     page: parseInt(page, 10),
+    //     limit: parseInt(perPage, 10)
+    // };
     // const events = await _Events.paginate({owner: owner},options);
+    */
+
+   //Search for all events of the user and sort them by date
     const events = await _Events.find({owner:owner}).limit(20).skip(1).sort({date: -1});
     res.status(200).json(events);
 });
@@ -32,8 +33,8 @@ router.get('/show/all', auth ,async (req, res, next) => {
 // @    Show event by id
 // @    Public
 router.get('/show/:id', auth ,async (req, res, next) => {
+    //Getting id of event from request
     const id = req.params.id;
-    // const event = await _Events.findOne({ email });
     await _Events.findById(id, (err, events) => {
         if(err) {
             return next(new Error(err));
@@ -46,6 +47,7 @@ router.get('/show/:id', auth ,async (req, res, next) => {
 // @    Creating new event
 // @    Public
 router.post('/create', auth , [
+    //Validating form
     check('name').not().isEmpty(),
     check('date').not().isEmpty(),
 ], async (req, res) => {
@@ -55,17 +57,18 @@ router.post('/create', auth , [
         res.status(401).json({errors: errors.array()})
     }
     try {
-        // let event = await _Events.findOne({ name });
+        //Searching user by email to get his/her id
         const find = await User.findOne({ email });
-        console.log(find._id);
         let event = new _Events({
             name: name,
             date: date,
             owner: owner,
         });
+        //Marking events by owner id
         event.owner = find._id;
+        //Saving event to db
         await event.save();
-        console.log(event._id);
+        //Sending event id for future manipulating
         res.send(event._id);
     } catch (e) {
         console.log(e.message);
@@ -77,6 +80,7 @@ router.post('/create', auth , [
 // @    Deleting event
 // @    Public
 router.put('/edit/:id', auth , [
+    //Validating form
     check('name').not().isEmpty(),
     check('date').not().isEmpty()
 ] ,async (req, res, next) => {
@@ -89,11 +93,12 @@ router.put('/edit/:id', auth , [
         if(error) {
             return next(new Error("'Wasn't found"));
         }
+        //Get new data for event to update
         events.name = req.body.name;
         events.date = req.body.date;
-        await events.save(
-            function (error, events) {
-                if(error)  { res.status(401).send('Unabled'); }
+
+        await events.save(( error, events ) => {
+                if(error) { res.status(401).send('Event unabled'); }
                 res.status(200).json(events);
             }
         )
@@ -112,7 +117,5 @@ router.delete('/delete/:id', auth ,async (req, res, next) => {
         res.json('Successfully removed')
     })
 });
-
-
 
 module.exports = router;
