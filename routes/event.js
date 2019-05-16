@@ -3,7 +3,6 @@ const mongoosePaginate = require('mongoose-paginate');
 const { check, validationResult } = require('express-validator/check');
 const config = require('config');
 const router = express.Router();
-const paginate = mongoosePaginate.paginate;
 
 const _Events = require('../models/Events');
 const User = require('../models/User');
@@ -24,7 +23,8 @@ router.get('/show/all', auth ,async (req, res, next) => {
         page: parseInt(page, 10),
         limit: parseInt(perPage, 10)
     };
-    const events = await _Events.paginate({owner: owner},options);
+    // const events = await _Events.paginate({owner: owner},options);
+    const events = await _Events.find({owner:owner}).limit(20).skip(1).sort({date: -1});
     res.status(200).json(events);
 });
 
