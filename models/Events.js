@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = require("mongoose");
+const mongoosePaginate = require('mongoose-paginate');
 
 const EventSchema = new mongoose.Schema({
     name: {
@@ -16,6 +17,6 @@ const EventSchema = new mongoose.Schema({
         ref: 'owner'
     }
 });
-
+EventSchema.plugin(mongoosePaginate);
 
 module.exports = EventCreate = mongoose.model('events', EventSchema);

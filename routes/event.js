@@ -1,37 +1,31 @@
 const express = require('express');
+const mongoosePaginate = require('mongoose-paginate');
 const { check, validationResult } = require('express-validator/check');
 const config = require('config');
 const router = express.Router();
+const paginate = mongoosePaginate.paginate;
 
 const _Events = require('../models/Events');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
-
 // @    Method GET me/events/all
 // @    Show all of the events
 // @    Public
 router.get('/show/all', auth ,async (req, res, next) => {
     const owner = req.header('owner');
-    await _Events.find({owner: owner}, (err, result) => {
-        if(err) {
-            res.status(401).send('Error');
-        }
-        res.json(result);
-    });
-    // const showAll = await _Events.find((err, result) => {
-    //    if(err) {
-    //         return next(new Error(err));
-    //    }
-    //    res.status(200).json(result);
-    // });
-    // try{
-    //     if(!showAll)  {
-    //         res.status(401).json('There is no events yet');
+    // await _Events.find({owner: owner}, (err, result) => {
+    //     if(err) {
+    //         res.status(401).send('Error');
     //     }
-    // } catch (e) {
-    //     console.log(e.message);
-    //     res.status(500).send('Server error');
-    // }
+    //     res.json(result);
+    // });
+    const { page, perPage } = req.query;
+    const options = {
+        page: parseInt(page, 10),
+        limit: parseInt(perPage, 10)
+    };
+    const events = await _Events.paginate({owner: owner},options);
+    res.status(200).json(events);
 });
 
 // @    Method GET me/events/show:id
